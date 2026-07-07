@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cápsula del tiempo</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <p class="eyebrow">Para abrir en un año</p>
+      <h1>🧡 Cápsula del tiempo</h1>
+      <p>Aquí guardamos un video y fotos para abrir de nuevo dentro de un año entero.</p>
+    </header>
+
+    <div class="card">
+      <p>Sube un video y algunas fotos, y el contenido se guardará en esta misma página para que lo vuelvan a ver luego.</p>
+
+      <div class="form-group">
+        <label for="videoInput">Video</label>
+        <input id="videoInput" type="file" accept="video/*" />
+      </div>
+
+      <div class="form-group">
+        <label for="photoInput">Fotos</label>
+        <input id="photoInput" type="file" accept="image/*" multiple />
+      </div>
+
+      <p class="small-note" id="capsuleDate">Se abrirá el: </p>
+
+      <div class="preview-grid" id="previewGrid"></div>
+      <a class="back-link" href="index.html">← Volver al inicio</a>
+    </div>
+  </div>
+
+  <script>
+    const videoInput = document.getElementById('videoInput');
+    const photoInput = document.getElementById('photoInput');
+    const previewGrid = document.getElementById('previewGrid');
+    const capsuleDate = document.getElementById('capsuleDate');
+
+    const nextYear = new Date();
+    nextYear.setFullYear(nextYear.getFullYear() + 1);
+    capsuleDate.textContent = `Se abrirá el: ${nextYear.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+
+    function saveState(videoUrl, photos) {
+      localStorage.setItem('capsuleVideo', videoUrl || '');
+      localStorage.setItem('capsulePhotos', JSON.stringify(photos));
+    }
+
+    function loadState() {
+      const videoUrl = localStorage.getItem('capsuleVideo') || '';
+      const photos = JSON.parse(localStorage.getItem('capsulePhotos') || '[]');
+      return { videoUrl, photos };
+    }
+
+    function renderPreview(videoUrl, photos) {
+      previewGrid.innerHTML = '';
+
+      if (videoUrl) {
+        const videoWrapper = document.createElement('div');
+        videoWrapper.innerHTML = `<video controls src="${videoUrl}"></video>`;
+        previewGrid.appendChild(videoWrapper);
+      }
+
+      photos.forEach((photoUrl) => {
+        const img = document.createElement('img');
+        img.src = photoUrl;
+        img.alt = 'Foto guardada en la cápsula';
+        previewGrid.appendChild(img);
+      });
+    }
+
+    function readFileAsDataURL(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    videoInput.addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const videoUrl = await readFileAsDataURL(file);
+      const { photos } = loadState();
+      saveState(videoUrl, photos);
+      renderPreview(videoUrl, photos);
+    });
+
+    photoInput.addEventListener('change', async (event) => {
+      const files = Array.from(event.target.files || []);
+      if (!files.length) return;
+      const photos = await Promise.all(files.map((file) => readFileAsDataURL(file)));
+      const { videoUrl } = loadState();
+      saveState(videoUrl, photos);
+      renderPreview(videoUrl, photos);
+    });
+
+    const { videoUrl, photos } = loadState();
+    renderPreview(videoUrl, photos);
+  </script>
+</body>
+</html>

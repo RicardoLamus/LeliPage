@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ticket diario</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <p class="eyebrow">Recompensa diaria</p>
+      <h1>🎟️ Reclama tu ticket diario</h1>
+      <p>Un cupón nuevo cada 24 horas, con premios que van desde algo dulce hasta un regalito especial.</p>
+    </header>
+
+    <div class="card">
+      <div class="button-row">
+        <button class="primary-btn" id="claimButton" type="button">Reclamar cupón</button>
+        <a class="back-link" href="index.html">← Volver al inicio</a>
+      </div>
+
+      <div class="result-box" id="claimResult">Tu cupón aparecerá aquí</div>
+      <p class="small-note" id="cooldownText">Puedes reclamar una vez cada 24 horas.</p>
+
+      <div class="ticket-grid">
+        <div class="ticket-card">
+          <strong>Seleccionar película</strong>
+          <p>Elige la película que verán juntos.</p>
+        </div>
+        <div class="ticket-card">
+          <strong>Seleccionar Night Date</strong>
+          <p>Una cita especial para el día que más quieran.</p>
+        </div>
+        <div class="ticket-card">
+          <strong>Dulce de $1</strong>
+          <p>Un detalle pequeño y muy tierno.</p>
+        </div>
+        <div class="ticket-card">
+          <strong>Dulce de $3</strong>
+          <p>Un premio un poco más especial.</p>
+        </div>
+        <div class="ticket-card">
+          <strong>Dulce de $5</strong>
+          <p>Más valor, más emoción.</p>
+        </div>
+        <div class="ticket-card">
+          <strong>Dulce de $10</strong>
+          <p>Un premio más bonito, más raro.</p>
+        </div>
+        <div class="ticket-card">
+          <strong>Regalito de $20</strong>
+          <p>El más difícil de conseguir, por eso es tan especial.</p>
+        </div>
+        <div class="ticket-card">
+          <strong>Seleccionar juego de la Night</strong>
+          <p>Una sorpresa para la noche. </p>
+        </div>
+        <div class="ticket-card">
+          <strong>Videollamada de Almuerzo o Cena</strong>
+          <p>Una cita especial por videollamada. </p>
+        </div>
+        <div class="ticket-card">
+          <strong>Para pedir un favor sin rechistar</strong>
+          <p>Un gesto de confianza y cariño. </p>
+        </div>
+        <div class="ticket-card">
+          <strong>Decirte Sí a todo durante 5 horas</strong>
+          <p>Un reto muy tierno y muy intenso. </p>
+        </div>
+        <div class="ticket-card">
+          <strong>Para que me calle la jetica un ratito</strong>
+          <p>Un premio rápido y divertido. </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const coupons = [
+      { name: 'Seleccionar película', weight: 30 },
+      { name: 'Seleccionar Night Date', weight: 25 },
+      { name: 'Dulce de $1', weight: 20 },
+      { name: 'Dulce de $3', weight: 15 },
+      { name: 'Dulce de $5', weight: 7 },
+      { name: 'Dulce de $10', weight: 3 },
+      { name: 'Regalito de $20', weight: 1 },
+      { name: 'Seleccionar juego de la Night', weight: 25 },
+      { name: 'Videollamada de Almuerzo o Cena', weight: 20 },
+      { name: 'Para pedir un favor sin rechistar', weight: 20 },
+      { name: 'Decirte Sí a todo durante 5 horas', weight: 5 },
+      { name: 'Para que me calle la jetica un ratito', weight: 10 }
+    ];
+
+    const claimButton = document.getElementById('claimButton');
+    const claimResult = document.getElementById('claimResult');
+    const cooldownText = document.getElementById('cooldownText');
+    const DAY = 24 * 60 * 60 * 1000;
+
+    function weightedPick(items) {
+      const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
+      let random = Math.random() * totalWeight;
+      for (const item of items) {
+        random -= item.weight;
+        if (random <= 0) return item.name;
+      }
+      return items[0].name;
+    }
+
+    function getTimeLeft(timestamp) {
+      const remaining = timestamp + DAY - Date.now();
+      if (remaining <= 0) return null;
+      const hours = Math.floor(remaining / (60 * 60 * 1000));
+      const mins = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+      return `${hours}h ${mins}m`;
+    }
+
+    function updateState() {
+      const lastClaim = Number(localStorage.getItem('dailyTicketLastClaim') || 0);
+      if (lastClaim && Date.now() - lastClaim < DAY) {
+        claimButton.disabled = true;
+        const left = getTimeLeft(lastClaim);
+        claimButton.textContent = 'Esperando...';
+        cooldownText.textContent = `Vuelve en ${left || 'poco'}`;
+        claimResult.textContent = `Tu último cupón fue: ${localStorage.getItem('dailyTicketLastCoupon') || '—'}`;
+      } else {
+        claimButton.disabled = false;
+        claimButton.textContent = 'Reclamar cupón';
+        cooldownText.textContent = 'Puedes reclamar una vez cada 24 horas.';
+      }
+    }
+
+    claimButton.addEventListener('click', () => {
+      const lastClaim = Number(localStorage.getItem('dailyTicketLastClaim') || 0);
+      if (lastClaim && Date.now() - lastClaim < DAY) {
+        updateState();
+        return;
+      }
+
+      const reward = weightedPick(coupons);
+      localStorage.setItem('dailyTicketLastClaim', Date.now().toString());
+      localStorage.setItem('dailyTicketLastCoupon', reward);
+      claimResult.textContent = `¡Cupón conseguido! ${reward}`;
+      updateState();
+    });
+
+    updateState();
+  </script>
+</body>
+</html>

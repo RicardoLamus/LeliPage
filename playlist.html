@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Playlist</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <p class="eyebrow">Nuestra música favorita</p>
+      <h1>🎶 Playlist de nosotros</h1>
+      <p>Un espacio para guardar canciones, momentos y vibra de los dos.</p>
+    </header>
+
+    <div class="card">
+      <p>Esta es una playlist sencilla para que suene mientras compartimos rato juntos.</p>
+
+      <div class="audio-box">
+        <audio id="audioPlayer" controls preload="auto"></audio>
+      </div>
+
+      <div id="playlistList" class="playlist-list"></div>
+
+      <a class="back-link" href="index.html">← Volver al inicio</a>
+
+      <script>
+        const playlist = [
+          {
+            title: 'Fly Me To The Moon',
+            src: 'music/Fly Me To The Moon - Claire Littley - Evangelion Ending - (Sub EspañolLyrics).mp3',
+            description: 'Para noches románticas y suaves.'
+          },
+          {
+            title: "Can't Take My Eyes Off You",
+            src: "music/Can't take my eyes off you (10 things i hate about you).mp3",
+            description: 'Una canción tierna y muy especial.'
+          },
+          {
+            title: "That's Life",
+            src: 'music/Frank Sinatra - That\'s Life (Audio).mp3',
+            description: 'Para bailar y reír un rato.'
+          },
+          {
+            title: 'La Gloria Eres Tú',
+            src: 'music/Luis Miguel - La Gloria Eres Tú (Video Con Letra).mp3',
+            description: 'Con mucho sentimiento y cariño.'
+          },
+          {
+            title: 'Tiroteo (Remix)',
+            src: 'music/Marc Segui, Rauw Alejandro, Pol Granch - Tiroteo (Remix).mp3',
+            description: 'Para una vibra más movida.'
+          },
+          {
+            title: 'L.O.V.E.',
+            src: 'music/Michael Bublé - L.O.V.E. [Official Audio].mp3',
+            description: 'Perfecta para una tarde tranquila.'
+          },
+          {
+            title: 'Llévame en un Beso',
+            src: 'music/Paté de Fuá ft. Lila Downs - Llévame en un Beso (Audio Oficial).mp3',
+            description: 'Muy bonita para compartir.'
+          },
+          {
+            title: 'Selfless',
+            src: 'music/The Strokes - Selfless (Official Audio).mp3',
+            description: 'Para una vibra más indie.'
+          },
+          {
+            title: 'Luna',
+            src: 'music/Zoé - Luna (MTV Unplugged).mp3',
+            description: 'Una canción especial para cerrar el rato.'
+          }
+        ];
+
+        const audioPlayer = document.getElementById('audioPlayer');
+        const playlistList = document.getElementById('playlistList');
+        let currentIndex = 0;
+
+        function renderPlaylist() {
+          playlistList.innerHTML = '';
+          playlist.forEach((song, index) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'playlist-item';
+            if (index === currentIndex) {
+              button.classList.add('active');
+            }
+            button.dataset.index = index;
+            button.innerHTML = `<strong>${index + 1}. ${song.title}</strong><span>${song.description}</span>`;
+            playlistList.appendChild(button);
+          });
+        }
+
+        function loadSong(index) {
+          currentIndex = index;
+          const song = playlist[currentIndex];
+          audioPlayer.src = song.src;
+          audioPlayer.load();
+          audioPlayer.play().catch(() => {});
+          renderPlaylist();
+        }
+
+        function playNext() {
+          const nextIndex = (currentIndex + 1) % playlist.length;
+          loadSong(nextIndex);
+        }
+
+        playlistList.addEventListener('click', (event) => {
+          const button = event.target.closest('.playlist-item');
+          if (!button) return;
+          const index = Number(button.dataset.index);
+          loadSong(index);
+        });
+
+        audioPlayer.addEventListener('ended', playNext);
+
+        renderPlaylist();
+        loadSong(0);
+      </script>
+    </div>
+  </div>
+</body>
+</html>

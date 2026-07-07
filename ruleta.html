@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ruleta de planes</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <p class="eyebrow">Tu destino del día</p>
+      <h1>🎲 Ruleta de cosas que hacer</h1>
+      <p>Gira y deja que el universo elija nuestro próximo plan.</p>
+    </header>
+
+    <div class="card">
+      <div class="roulette-wrapper">
+        <div class="roulette-wheel" id="rouletteWheel">
+          <div class="wheel-center">✨</div>
+        </div>
+      </div>
+
+      <div class="button-row">
+        <button class="primary-btn" id="spinButton" type="button">Girar ruleta</button>
+        <a class="back-link" href="index.html">← Volver al inicio</a>
+      </div>
+
+      <div class="result-box" id="rouletteResult">Tu destino aparecerá aquí</div>
+
+      <div class="option-tags">
+        <span>1. Nuevo mundo de Minecraft</span>
+        <span>2. Noche de películas</span>
+        <span>3. Jugar Roblox</span>
+        <span>4. Rave con Roier</span>
+        <span>5. Temas de Pinterest</span>
+        <span>6. Hablar sobre nuestro futuro</span>
+        <span>7. Algo nuevo</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const options = [
+      'Nuevo mundo de Minecraft',
+      'Noche de películas',
+      'Jugar Roblox (Dti y otras cosas de terror)',
+      'Rave con Roier',
+      'Temas de Pinterest',
+      'Hablar sobre nuestro futuro',
+      'Algo nuevo'
+    ];
+
+    const wheel = document.getElementById('rouletteWheel');
+    const spinButton = document.getElementById('spinButton');
+    const resultText = document.getElementById('rouletteResult');
+    const colors = ['#ff6584', '#ff8da1', '#ffb6c1', '#ff4d79', '#ff7aa2', '#ffb3c6', '#ff9fb2'];
+    const segmentAngle = 360 / options.length;
+
+    wheel.style.background = `conic-gradient(from -90deg, ${colors.map((color, index) => `${color} ${index * segmentAngle}deg ${(index + 1) * segmentAngle}deg`).join(', ')})`;
+
+    spinButton.addEventListener('click', () => {
+      if (spinButton.disabled) return;
+
+      const randomIndex = Math.floor(Math.random() * options.length);
+      const extraSpins = 360 * 5;
+      const offset = 360 - (segmentAngle * randomIndex + segmentAngle / 2);
+      const targetRotation = extraSpins + offset;
+
+      spinButton.disabled = true;
+      spinButton.textContent = 'Girando...';
+      resultText.textContent = '🎡 ¡Aquí va!';
+
+      wheel.style.transform = `rotate(${targetRotation}deg)`;
+
+      setTimeout(() => {
+        resultText.textContent = `¡Te toca: ${options[randomIndex]}!`;
+        spinButton.disabled = false;
+        spinButton.textContent = 'Girar otra vez';
+      }, 4000);
+    });
+  </script>
+</body>
+</html>
