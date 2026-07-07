@@ -76,6 +76,16 @@
     </div>
   </div>
 
+  <div id="couponModal" class="coupon-modal" hidden>
+    <div class="coupon-modal-content">
+      <button class="coupon-modal-close" type="button" aria-label="Cerrar mensaje">✕</button>
+      <p class="coupon-modal-title">Felicidades!</p>
+      <p class="coupon-modal-text">Tu cupón de hoy fue:</p>
+      <p id="couponModalText" class="coupon-modal-reward">---</p>
+      <button class="primary-btn" id="closeCouponModal" type="button">Cerrar</button>
+    </div>
+  </div>
+
   <script>
     const coupons = [
       { name: 'Seleccionar película', weight: 30 },
@@ -95,7 +105,10 @@
     const claimButton = document.getElementById('claimButton');
     const claimResult = document.getElementById('claimResult');
     const cooldownText = document.getElementById('cooldownText');
-    const DAY = 24 * 60 * 60 * 1000;
+    const couponModal = document.getElementById('couponModal');
+    const couponModalText = document.getElementById('couponModalText');
+    const closeCouponModal = document.getElementById('closeCouponModal');
+    const couponModalClose = document.querySelector('.coupon-modal-close');
 
     function weightedPick(items) {
       const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
@@ -107,44 +120,34 @@
       return items[0].name;
     }
 
-    function getTimeLeft(timestamp) {
-      const remaining = timestamp + DAY - Date.now();
-      if (remaining <= 0) return null;
-      const hours = Math.floor(remaining / (60 * 60 * 1000));
-      const mins = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
-      return `${hours}h ${mins}m`;
+    function showCouponModal(reward) {
+      couponModalText.textContent = reward;
+      couponModal.hidden = false;
+      document.body.style.overflow = 'hidden';
     }
 
-    function updateState() {
-      const lastClaim = Number(localStorage.getItem('dailyTicketLastClaim') || 0);
-      if (lastClaim && Date.now() - lastClaim < DAY) {
-        claimButton.disabled = true;
-        const left = getTimeLeft(lastClaim);
-        claimButton.textContent = 'Esperando...';
-        cooldownText.textContent = `Vuelve en ${left || 'poco'}`;
-        claimResult.textContent = `Tu último cupón fue: ${localStorage.getItem('dailyTicketLastCoupon') || '—'}`;
-      } else {
-        claimButton.disabled = false;
-        claimButton.textContent = 'Reclamar cupón';
-        cooldownText.textContent = 'Puedes reclamar una vez cada 24 horas.';
-      }
+    function closeModal() {
+      couponModal.hidden = true;
+      document.body.style.overflow = '';
     }
 
     claimButton.addEventListener('click', () => {
-      const lastClaim = Number(localStorage.getItem('dailyTicketLastClaim') || 0);
-      if (lastClaim && Date.now() - lastClaim < DAY) {
-        updateState();
-        return;
-      }
-
       const reward = weightedPick(coupons);
-      localStorage.setItem('dailyTicketLastClaim', Date.now().toString());
-      localStorage.setItem('dailyTicketLastCoupon', reward);
       claimResult.textContent = `¡Cupón conseguido! ${reward}`;
-      updateState();
+      cooldownText.textContent = 'Puedes tomar otro cupón cuando quieras.';
+      showCouponModal(reward);
     });
 
-    updateState();
+    closeCouponModal.addEventListener('click', closeModal);
+    couponModalClose.addEventListener('click', closeModal);
+
+    couponModal.addEventListener('click', (event) => {
+      if (event.target === couponModal) closeModal();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !couponModal.hidden) closeModal();
+    });
   </script>
 </body>
 </html>
