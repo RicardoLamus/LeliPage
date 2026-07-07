@@ -110,6 +110,34 @@
     const closeCouponModal = document.getElementById('closeCouponModal');
     const couponModalClose = document.querySelector('.coupon-modal-close');
 
+    const DAY = 24 * 60 * 60 * 1000;
+    const LAST_CLAIM_KEY = 'dailyTicketLastClaim';
+    const LAST_COUPON_KEY = 'dailyTicketLastCoupon';
+    const OVERRIDE_KEY = 'dailyTicketOverrideDate';
+
+    function getTodayKey() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function getLastClaim() {
+      return Number(localStorage.getItem(LAST_CLAIM_KEY) || 0);
+    }
+
+    function getLastCoupon() {
+      return localStorage.getItem(LAST_COUPON_KEY) || '—';
+    }
+
+    function hasOverrideToday() {
+      return localStorage.getItem(OVERRIDE_KEY) === getTodayKey();
+    }
+
+    function clearOldOverride() {
+      const today = getTodayKey();
+      if (localStorage.getItem(OVERRIDE_KEY) && localStorage.getItem(OVERRIDE_KEY) !== today) {
+        localStorage.removeItem(OVERRIDE_KEY);
+      }
+    }
+
     function weightedPick(items) {
       const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
       let random = Math.random() * totalWeight;
@@ -131,11 +159,64 @@
       document.body.style.overflow = '';
     }
 
+    function getTimeLeft(timestamp) {
+      const remaining = timestamp + DAY - Date.now();
+      if (remaining <= 0) return null;
+      const hours = Math.floor(remaining / (60 * 60 * 1000));
+      const mins = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+      return `${hours}h ${mins}m`;
+    }
+
+    function updateState() {
+      clearOldOverride();
+      const lastClaim = getLastClaim();
+      const lastCoupon = getLastCoupon();
+      const isWaiting = lastClaim && Date.now() - lastClaim < DAY;
+      const timeLeft = getTimeLeft(lastClaim);
+
+      if (!lastClaim) {
+        claimButton.disabled = false;
+        claimButton.textContent = 'Reclamar cupón';
+        cooldownText.textContent = 'Puedes reclamar una vez cada 24 horas.';
+        claimResult.textContent = 'Tu cupón aparecerá aquí';
+        return;
+      }
+
+      if (isWaiting) {
+        if (!hasOverrideToday()) {
+          claimButton.disabled = false;
+          claimButton.textContent = 'Reclamar cupón';
+          cooldownText.textContent = 'Hoy puedes reclamar un cupón extra. Después vuelve en 24 horas.';
+          claimResult.textContent = `Tu último cupón fue: ${lastCoupon}`;
+        } else {
+          claimButton.disabled = true;
+          claimButton.textContent = 'Esperando...';
+          cooldownText.textContent = `Vuelve en ${timeLeft || 'poco'}`;
+          claimResult.textContent = `Tu último cupón fue: ${lastCoupon}`;
+        }
+        return;
+      }
+
+      claimButton.disabled = false;
+      claimButton.textContent = 'Reclamar cupón';
+      cooldownText.textContent = 'Puedes reclamar una vez cada 24 horas.';
+      claimResult.textContent = `Tu último cupón fue: ${lastCoupon}`;
+    }
+
     claimButton.addEventListener('click', () => {
+      const lastClaim = getLastClaim();
+      const isWaiting = lastClaim && Date.now() - lastClaim < DAY;
+
+      if (isWaiting && !hasOverrideToday()) {
+        localStorage.setItem(OVERRIDE_KEY, getTodayKey());
+      }
+
       const reward = weightedPick(coupons);
+      localStorage.setItem(LAST_CLAIM_KEY, Date.now().toString());
+      localStorage.setItem(LAST_COUPON_KEY, reward);
       claimResult.textContent = `¡Cupón conseguido! ${reward}`;
-      cooldownText.textContent = 'Puedes tomar otro cupón cuando quieras.';
       showCouponModal(reward);
+      updateState();
     });
 
     closeCouponModal.addEventListener('click', closeModal);
@@ -148,6 +229,8 @@
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && !couponModal.hidden) closeModal();
     });
+
+    updateState();
   </script>
 </body>
 </html>
