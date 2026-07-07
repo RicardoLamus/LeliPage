@@ -325,6 +325,10 @@ body {
   padding: 20px;
 }
 
+.coupon-modal[hidden] {
+  display: none !important;
+}
+
 .coupon-modal-content {
   width: min(100%, 420px);
   background: var(--blanco);

@@ -76,7 +76,7 @@
     </div>
   </div>
 
-  <div id="couponModal" class="coupon-modal" hidden>
+  <div id="couponModal" class="coupon-modal" hidden style="display: none;">
     <div class="coupon-modal-content">
       <button class="coupon-modal-close" type="button" aria-label="Cerrar mensaje">✕</button>
       <p class="coupon-modal-title">Felicidades!</p>
@@ -151,11 +151,13 @@
     function showCouponModal(reward) {
       couponModalText.textContent = reward;
       couponModal.hidden = false;
+      couponModal.style.display = 'flex';
       document.body.style.overflow = 'hidden';
     }
 
     function closeModal() {
       couponModal.hidden = true;
+      couponModal.style.display = 'none';
       document.body.style.overflow = '';
     }
 
